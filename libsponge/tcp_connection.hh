@@ -13,12 +13,28 @@ class TCPConnection {
     TCPReceiver _receiver{_cfg.recv_capacity};
     TCPSender _sender{_cfg.send_capacity, _cfg.rt_timeout, _cfg.fixed_isn};
 
+    size_t LISTEN = 0;
+    size_t CLOSED = 1;
+    size_t ESTABLISHED = 2;
+    size_t FIN_WAIT_1 = 3;
+    size_t FIN_WAIT_2 = 4;
+    size_t CLOSING = 5;
+    size_t CLOSE_WAIT = 6;
+    size_t TIME_WAIT = 7;
+    size_t LAST_ACK = 8;
+    size_t SYN_RECV = 9;
+    size_t SYN_SENT = 10;
+    mutable size_t _tcp_state = LISTEN;
     //! outbound queue of segments that the TCPConnection wants sent
     std::queue<TCPSegment> _segments_out{};
+    size_t _time_since_last_segment_received = 0;
 
+    /*bool 记录是否 reset */
+    bool _reset{false};
     //! Should the TCPConnection stay active (and keep ACKing)
     //! for 10 * _cfg.rt_timeout milliseconds after both streams have ended,
     //! in case the remote TCPConnection doesn't know we've received its whole stream?
+    /*如果 输入在输出之前已经达到了fin那么 该变量就标识未 false，用于区分 那一边进行的断开连接操作*/
     bool _linger_after_streams_finish{true};
 
   public:
@@ -74,9 +90,14 @@ class TCPConnection {
     //! but could also be user datagrams (UDP) or any other kind).
     std::queue<TCPSegment> &segments_out() { return _segments_out; }
 
+    /*发送 reset字段*/
+    void send_reset_segment();
+    void reset();
+
     //! \brief Is the connection still alive in any way?
     //! \returns `true` if either stream is still running or if the TCPConnection is lingering
     //! after both streams have finished (e.g. to ACK retransmissions from the peer)
+    /*如果其中一个流仍在运行或两个流都完成后TCPConnection仍在延迟，则返回“true”（例如，从对等端进行ACK重新传输）*/
     bool active() const;
     //!@}
 
@@ -94,6 +115,8 @@ class TCPConnection {
     TCPConnection(const TCPConnection &other) = delete;
     TCPConnection &operator=(const TCPConnection &other) = delete;
     //!@}
+
+    void fill_windows(bool must_reply);
 };
 
 #endif  // SPONGE_LIBSPONGE_TCP_FACTORED_HH

@@ -6,6 +6,10 @@
 
 //! \brief A 32-bit integer, expressed relative to an arbitrary initial sequence number (ISN)
 //! \note This is used to express TCP sequence numbers (seqno) and acknowledgment numbers (ackno)
+/*
+ * 序号和确认号
+ *
+ * */
 class WrappingInt32 {
   private:
     uint32_t _raw_value;  //!< The raw 32-bit stored integer
@@ -44,6 +48,10 @@ uint64_t unwrap(WrappingInt32 n, WrappingInt32 isn, uint64_t checkpoint);
 //! \returns the number of increments needed to get from `b` to `a`,
 //! negative if the number of decrements needed is less than or equal to
 //! the number of increments
+/*
+ * 运算符重载，比较俩个对象中存的value值
+ *
+ * */
 inline int32_t operator-(WrappingInt32 a, WrappingInt32 b) { return a.raw_value() - b.raw_value(); }
 
 //! \brief Whether the two integers are equal.
