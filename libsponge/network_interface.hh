@@ -5,6 +5,7 @@
 #include "tcp_over_ip.hh"
 #include "tun.hh"
 
+#include <map>
 #include <optional>
 #include <queue>
 
@@ -39,6 +40,28 @@ class NetworkInterface {
 
     //! outbound queue of Ethernet frames that the NetworkInterface wants sent
     std::queue<EthernetFrame> _frames_out{};
+
+    size_t _current_time{0};
+
+    // IPAddress (numeric) to EthernetAddress mapping cache.
+    // The second item in pair is recording time. Cache would expire in 30s (30000ms) after recorded.
+    std::map<uint32_t, std::pair<EthernetAddress, size_t>> _addr_cache{};
+
+    // Last request time for IPAddress (numeric).
+    // The ARP request for the same IP address would only be sent if at least 5s (5000ms) have passed.
+    std::map<uint32_t, size_t> _addr_request_time{};
+
+    // IP datagrams waiting to be sent (the target Ethernet Address is yet unknown).
+    std::deque<std::pair<uint32_t, InternetDatagram>> _waiting_dgrams{};
+
+    // Remove expired(>30s) address cache. Should be called when time passes.
+    void _remove_expired_cache();
+
+    // Try to send datagrams in waiting queue when a new IP to Ethernet address mapping is learned.
+    void _try_send_waiting(uint32_t new_ip);
+
+    // Helper function for creating an Ethernet frame. The src of the frame is _ethernet_address
+    EthernetFrame _make_frame(const EthernetAddress &dst, uint16_t type, const BufferList &payload);
 
   public:
     //! \brief Construct a network interface with given Ethernet (network-access-layer) and IP (internet-layer) addresses

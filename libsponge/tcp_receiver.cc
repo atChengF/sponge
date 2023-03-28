@@ -11,6 +11,7 @@ void DUMMY_CODE(Targs &&... /* unused */) {}
 using namespace std;
 
 /*接收TCP报文，然后还原*/
+
 void TCPReceiver::segment_received(const TCPSegment &seg) {
     TCPHeader header = seg.header();
     //保证收到第一个报文段为 请求同步报文
@@ -43,4 +44,6 @@ optional<WrappingInt32> TCPReceiver::ackno() const {
     return WrappingInt32(res + 1);
 }
 /*返回当前的剩余端口*/
-size_t TCPReceiver::window_size() const { return _capacity - _reassembler.stream_out().buffer_size(); }
+size_t TCPReceiver::window_size() const {
+    return _capacity - _reassembler.stream_out().buffer_size();
+}

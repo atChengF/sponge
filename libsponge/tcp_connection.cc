@@ -47,6 +47,7 @@ void TCPConnection::segment_received(const TCPSegment &seg) {
         cerr << "TCPState in CLOSED because of the rst or TIME_OUT \n";
         return;
     }
+
     //标记时间
     if(_tcp_state == LISTEN){
         /*处理LISTEN 状态*/
@@ -85,7 +86,11 @@ void TCPConnection::segment_received(const TCPSegment &seg) {
             _tcp_state = ESTABLISHED;
         return;
     }
-
+    //当前是 keep- alive 探测报文
+    if(seg.length_in_sequence_space() == 0 && seg.header().ack && seg.header().seqno == _receiver.ackno().value() - 1){
+        fill_windows(true);
+        return;
+    }
 
     if(_tcp_state == ESTABLISHED){
         if(!seg.header().ack) cerr << "Illegal linked order : TCPState in ESTABLISHED but the receive seg is not a ACK seg \n";
@@ -136,6 +141,7 @@ void TCPConnection::segment_received(const TCPSegment &seg) {
             _tcp_state = TIME_WAIT;
         return;
     }
+
     if(_tcp_state == CLOSING){
         _sender.ack_received(seg.header().ackno, seg.header().win);
         _receiver.segment_received(seg);
@@ -277,6 +283,8 @@ void TCPConnection::fill_windows(bool must_reply) {
             tcpSegment.header().win = _receiver.window_size();
         }
         // 直接 送出
+        if(tcpSegment.header().ack && tcpSegment.header().win == 0) _zero_win = true;
+        if(tcpSegment.header().ack && tcpSegment.header().win != 0) _zero_win = false;
         _segments_out.push(tcpSegment);
     }
     if(!must_reply) return;

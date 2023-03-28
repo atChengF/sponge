@@ -16,6 +16,7 @@ using State = TCPTestHarness::State;
 
 int main() {
     try {
+
         TCPConfig cfg{};
 
         // test #1: START -> LISTEN -> SYN -> SYN/ACK -> ACK
@@ -24,9 +25,13 @@ int main() {
 
             // tell the FSM to connect, make sure we get a SYN
             test_1.execute(Listen{});
+
             test_1.execute(ExpectState{State::LISTEN});
+
             test_1.execute(Tick(1));
+
             test_1.execute(ExpectState{State::LISTEN});
+
 
             test_1.send_syn(WrappingInt32{0}, {});
             test_1.execute(Tick(1));
@@ -55,6 +60,7 @@ int main() {
             test_1.execute(Tick(1));
             test_1.execute(ExpectNoSegment{}, "test 1 failed: no need to ACK an ACK");
             test_1.execute(ExpectState{State::ESTABLISHED});
+
         }
     } catch (const exception &e) {
         cerr << e.what() << endl;

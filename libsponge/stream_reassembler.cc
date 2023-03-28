@@ -14,8 +14,8 @@ void DUMMY_CODE(Targs &&... /* unused */) {}
 
 using namespace std;
 
-StreamReassembler::StreamReassembler(const size_t capacity) :
-    _output(capacity), _capacity(capacity), _map(), _set(), _idx_ptr(0), _idx_end(1e9){
+StreamReassembler::StreamReassembler(const size_t capacity)
+    : _output(capacity), _capacity(capacity), _map(), _set(), _idx_ptr(0), _idx_end(1e9){
 
 }
 
@@ -64,8 +64,9 @@ void StreamReassembler::push_substring(const string &data, const size_t index, c
     //删除超过字符容量的字符
     idx = _idx_ptr;
     while(_map.count(idx + _capacity)){
-        _map.erase(idx);
-        _set.erase(idx ++ );
+        _map.erase(idx + _capacity);
+        _set.erase(_capacity + idx);
+        idx ++ ;
     }
     if(_idx_ptr >= _idx_end) _output.end_input();
 }

@@ -12,7 +12,7 @@ class TCPConnection {
     TCPConfig _cfg;
     TCPReceiver _receiver{_cfg.recv_capacity};
     TCPSender _sender{_cfg.send_capacity, _cfg.rt_timeout, _cfg.fixed_isn};
-
+    bool _zero_win = false;
     size_t LISTEN = 0;
     size_t CLOSED = 1;
     size_t ESTABLISHED = 2;
